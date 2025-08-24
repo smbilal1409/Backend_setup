@@ -1,7 +1,7 @@
 import express from "express"
 import cors from "cors";
 import cookieParser from "cookie-parser";
-const app=express;
+const app=express();
 app.use(cors({
 origin:process.env.CORS_ORIGIN,
 credentials:true
@@ -15,3 +15,6 @@ app.use(express.urlencoded({
 }))
 app.use(express.static("Public"));
 app.use(cookieParser());
+import routerhandler from "./routes/userregister.routes.js";
+app.use("/api/v1/user",routerhandler);
+export {app};

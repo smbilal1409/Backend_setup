@@ -1,11 +1,17 @@
-const asynchandlerfunction=(fn)=>async(req,res,next)=>{
-    try {
-        await fn(req,res,next);
-    } catch (err) {
-        res.status(err.code||500).json({
-            success:false,
-            message:err.message
-        })
-    }
-}
-export default asynchandlerfunction;
+const asyncHandler = (requestHandler) => {
+    return (req, res, next) => {
+      Promise.resolve(requestHandler(req, res, next))
+        .catch((error) => {
+          // Ensure we extract the status code from the error
+          const statusCode = error.statusCode || 500;
+          const message = error.message || "Internal Server Error";
+          
+          res.status(statusCode).json({
+            success: false,
+            message: message
+          });
+        });
+    };
+  };
+  
+  export default asyncHandler;

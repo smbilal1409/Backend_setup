@@ -22,10 +22,11 @@ const userschema=new Schema({
         required:true,
        index:true,
         trim:true,
-        unique:true
+        
     },
     avatar:{
         type:String,//cloudinary
+        required:true
 
     },
     coverimage:{
@@ -33,7 +34,7 @@ const userschema=new Schema({
     },
     password:{
         type:String,
-        unique:true,
+        
         required:true
     },
     watchhistory:[
@@ -50,20 +51,20 @@ const userschema=new Schema({
     timestamps:true
 })
 userschema.pre("save",async function(next){
-if(this.modified(password)){
-    this.password=bcrypt.hash(this.password,10);
+if(this.isModified("password")){
+    this.password=await bcrypt.hash(this.password,10);
     next();
 }
 else{
-naxt();
+next();
 }
 });
-userschema.method.ispasswordcorrect(async function(password){
+userschema.methods.isPasswordCorrect=async function(password){
     return await bcrypt.compare(password,this.password);
-});
+};
 //now we have to deal with the refreshtoken and accesstoken
-userschema.generate_access_token=function(){
-let refreshtoken=jsonwebtoken.sign(
+userschema.methods.generate_access_token=function(){
+let accesstoken=jsonwebtoken.sign(
     {
         _id:this._id,
         username:this.username,
@@ -72,19 +73,21 @@ let refreshtoken=jsonwebtoken.sign(
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-        expiry:process.env.ACCESS_TOKEN_EXPIRY
+        expiresIn:process.env.ACCESS_TOKEN_EXPIRY
     }
 )
+return accesstoken;
 }
-userschema.generate_refesh_token=function(){
+userschema.methods.generate_refesh_token=function(){
     let refreshtoken=jsonwebtoken.sign(
         {
             _id:this._id,
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiry:process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn:process.env.REFRESH_TOKEN_EXPIRY
         }
     )
+    return refreshtoken;
     }
- export const User=mongoose.models("User",userschema);
+ export const User=mongoose.model("User",userschema);
