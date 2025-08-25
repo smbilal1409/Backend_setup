@@ -15,6 +15,6 @@ app.use(express.urlencoded({
 }))
 app.use(express.static("Public"));
 app.use(cookieParser());
-import routerhandler from "./routes/userregister.routes.js";
+import routerhandler from "./routes/user.routes.js";
 app.use("/api/v1/user",routerhandler);
 export {app};
