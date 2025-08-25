@@ -5,11 +5,14 @@ import ApiResponse from "../utils/Apiresponse.js";
 import { User } from "../models/user.models.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
 import uploadoncloudinary from "../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
 const accessandrefreshtokenfunction=async(userid)=>{
 try {
     const user=await User.findById(userid);
     const accessToken=user.generate_access_token();
     const refreshToken=user.generate_refesh_token();
+    user.refreshToken=refreshToken;
+    await user.save({ validateBeforeSave : false });
     return{accessToken,refreshToken}
 } catch (error) {
     throw ApiError(500,"your request is incorrect");
@@ -119,9 +122,125 @@ await User.findByIdAndUpdate(req.user._id,
          .json(new ApiResponse(200,{},"user logged out"))
 
 })
+const refreshaccesstoken=asynchandlerfunction(async(req,res)=>{
+   const incomingrefreshtoken= req.cookie.accessToken || req.body.refreshToken;
+   if(!incomingrefreshtoken){
+    throw new ApiError(404,"unathorized request");
+   }
+   try {
+    const decodedrefreshtoken=jwt.verify(incomingrefreshtoken,process.env.REFRESH_TOKEN_SECRET);
+    const user=await User.findById(decodedrefreshtoken._id);
+    if(!user){
+     throw new ApiError(404,"unathorized request");
+    }
+    if(user.refreshToken===incomingrefreshtoken){
+ throw new ApiError(404,"incoming and db refresh token does not match");
+    }
+    const {accessToken,refreshToken}=await accessandrefreshtokenfunction(user._id);
+    const options = {
+     httpOnly: true,
+     secure: true,
+   };
+   return res.status(200)
+   .cookie("accessToken",accessToken,option)
+   .cookie("refreshToken",refreshToken,option)
+   .json(new ApiResponse(200,{accessToken,refreshToken},"accesstoken successfully sent"));
+   } catch (error) {
+    throw new ApiError(404,error?.message || "invalid refreshtoken");
+    
+   }
+})
+const changethepassword=asynchandlerfunction(async(req,res)=>{
+    const{oldpassword,newpassword}=req.body;
+   const user=await User.findById(req.user._id);
+   if(!user){
+    throw new ApiError(404,"user is not found");
+
+   }
+const isPasswordCorrect=await user.isPasswordCorrect(oldpassword);
+if(!isPasswordCorrect){
+    throw new ApiError(403,"password is incorrect");
+}
+user.password=newpassword;
+await user.save({validateBeforeSave : false })
+})
+const getcurrentuser=asynchandlerfunction(async(req,res)=>{
+    return res.status(200)
+    .json(new ApiResponse(200,req.user,"currenusersuccessfully sended"));
+})
+const updateaccountdetails=asynchandlerfunction(async(req,res)=>{
+    const {fullname,email}=req.body;
+    const user=User.findByIdAndUpdate(req.user._id,
+        {
+$set:{
+    fullname,
+    email
+}
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+    return res.status(200)
+    .json (new ApiResponse(200,user,"account details successfully updated"))
+})
+const updateavatar=asynchandlerfunction(async(req,res)=>{
+    const avatarlocalpath=req.file?.path;
+    if(!avatarlocalpath){
+        throw new ApiError(400,"avatar local path not found");
+    }
+    const avatar=await uploadoncloudinary(avatarlocalpath);
+    if(!avatar.id){
+        throw new ApiError(400,"avatar local path not found");
+    }
+    await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+           $set:{
+            avatar:avatar.url
+           } 
+        },
+        {
+            new:true
+        }
+    ).select(
+        "-password"
+)
+return res.status(200)
+    .json(new ApiResponse(200,user,"cover image successfully updated"));
+})
+const updatecoverimage=asynchandlerfunction(async(req,res)=>{
+    const coverimagelocalpath=req.file?.path;
+    if(!coverimagelocalpath){
+        throw new ApiError(402,"Cover image local path not found");
+    }
+    const coverimage=await uploadoncloudinary(coverimagelocalpath);
+    if(!coverimage.url){
+        throw new ApiError(402,"Cover image url not found");
+    }
+    await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                coverimage:coverimage.url
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+    return res.status(200)
+    .json(new ApiResponse(200,user,"cover image successfully updated"));
+})
 
 export {
     registeruser,
     loginuser,
-    logoutuser
+    logoutuser,
+    refreshaccesstoken,
+    changethepassword,
+    getcurrentuser,
+    updateaccountdetails,
+    updateavatar,
+    updatecoverimage
 }
