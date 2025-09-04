@@ -13,7 +13,8 @@ Connectdb()
 .then(() => {
     app.listen(process.env.PORT || 8000, () => {
         console.log(`Server running at port ${process.env.PORT}`);
-        console.log(`API URL: http://localhost:${process.env.PORT}/api/v1/user/register`);
+        console.log(`API URL: http://localhost:${process.env.PORT}/api/v1/user`);
+        console.log(`API URL: http://localhost:${process.env.PORT}/api/v1/tweet`);
     });
 })
 .catch((error) => {

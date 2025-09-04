@@ -2,7 +2,7 @@ import { Router } from "express";
 import { registeruser, loginuser, logoutuser, refreshaccesstoken, 
     changethepassword, getcurrentuser, updateaccountdetails, 
     updatecoverimage, updateavatar, getthechannelprofile, 
-    getwatchhistory,creatthetweets } from "../controllers/user.controller.js";
+    getwatchhistory} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
 const router = Router();
@@ -34,5 +34,5 @@ router.route('/update-avatar').patch(upload.single('avatar'), verifyJWT, updatea
 router.route('/update-cover-image').patch(verifyJWT, upload.single('coverimage'), updatecoverimage);
 router.route('/getthechannelprofile/:username').get(verifyJWT, getthechannelprofile);
 router.route('/getthewatchhistory').get(verifyJWT, getwatchhistory);
-router.route('/creattweets').post(verifyJWT, creatthetweets);
+
 export default router;  

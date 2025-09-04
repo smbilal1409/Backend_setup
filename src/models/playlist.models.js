@@ -1,12 +1,16 @@
 import mongoose, { Schema } from "mongoose";
-const playlistschema=new Schema({
+const Playlistschema=new Schema({
     name:{
 type:String,
-required:true
+required:true,
+trim: true,
+maxLength: [100, "Playlist name cannot exceed 100 characters"] 
 },
 description:{
 type:String,
 required:true,
+trim: true,
+maxLength: [500, "Playlist name cannot exceed 100 characters"] 
  },
  videos: [{  
     type: Schema.Types.ObjectId,
@@ -19,4 +23,4 @@ owner:{
 }
 },
 {timestamps:true})
-export const Playlist=mongoose.model("Playlist",playlistschema)
+export const Playlist=mongoose.model("Playlist",Playlistschema)

@@ -7,7 +7,7 @@ import { Subscription } from "../models/subscription.model.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
 import uploadoncloudinary from "../utils/cloudinary.js";
 import { Playlist } from "../models/playlist.models.js";
-import { Tweet } from "../models/tweets.models.js";
+
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import path from "path"
@@ -386,52 +386,10 @@ const getwatchhistory = asynchandlerfunction(async (req, res) => {
         new ApiResponse(200, user[0].watchhistory, "Watch history successfully sent")
     );
 });
-const creatthetweets=asynchandlerfunction(async(req,res)=>{
-    const{content}=req.body;
-    if(!content){
-        throw new ApiError;
-    }
-    const tweet=await Tweet.create({
-content:content,
-owner:req.user._id
-    })
-    if(!tweet){
-        throw new ApiError(404,"tweet is not found");
-    }
-    const createdTweet = await Tweet.findById(tweet._id).populate(
-        "owner",
-        "username avatar fullname"
-    );
-    
-    return res.status(201).json(new ApiResponse(201, createdTweet, "Tweet successfully created"));
-})
 
 
-// const getthetweets=asynchandlerfunction(async(req,res)=>{
-//     const{content}=req.body;
-//     const usertweets=await Tweet.aggregate([
-//         {
-//             $match:{
-//                 _id:req.user?._id
-//             }
-//         },
-//         {
-//         lookup:{
-//             from:"User",
-//             localField:"owner",
-//             foreignField:"_id",
-//             as:"owner"
-//         }
-//     },
-//     {
-//         $project:{
-//             owner,
-//             content
-//         }
-//     }
-//     ])
-//     return res.status(200).json(new ApiResponse(200,usertweets[0],"tweet successfully uploaded"));
-// })
+
+
 export {
     registeruser,
     loginuser,
@@ -443,6 +401,5 @@ export {
     updateavatar,
     updatecoverimage,
     getthechannelprofile,
-    getwatchhistory,
-    creatthetweets
+    getwatchhistory
 }
